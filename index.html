@@ -61,7 +61,7 @@
         .chart-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px; }
         .chart-title { font-size: 17px; font-weight: 600; color: #202124; margin-bottom: 20px; }
         .chart-row { display: flex; align-items: center; margin-bottom: 12px; gap: 12px; }
-        .chart-label { min-width: 90px; font-size: 13px; color: #666; text-align: left; white-space: nowrap; direction: ltr; }
+        .chart-label { min-width: 180px; font-size: 12px; color: #666; text-align: left; white-space: nowrap; direction: ltr; }
         .chart-bar-bg { flex: 1; height: 28px; background: #f0f2f5; border-radius: 6px; overflow: hidden; position: relative; }
         .chart-bar { height: 100%; background: #1a73e8; border-radius: 6px; transition: width 0.6s ease; min-width: 2px; }
         .chart-bar.green { background: #0d904f; }
@@ -83,7 +83,7 @@
             .result-details { flex-direction: column; gap: 8px; }
             .stats-grid { grid-template-columns: 1fr; }
             .stat-card.wide { grid-column: span 1; }
-            .chart-label { min-width: 70px; font-size: 12px; }
+            .chart-label { min-width: 130px; font-size: 11px; }
             .chart-info { min-width: 100px; font-size: 12px; }
             .page-tabs button { font-size: 15px; padding: 12px 10px; }
         }
@@ -315,12 +315,14 @@
             var mean = sum / n;
 
             var bands = [
-                { label: '0%', min: 0, max: 0, color: 'red' },
-                { label: '1% - 20%', min: 0.01, max: 64, color: 'red' },
-                { label: '21% - 40%', min: 64.01, max: 128, color: 'orange' },
-                { label: '41% - 60%', min: 128.01, max: 192, color: 'yellow' },
-                { label: '61% - 80%', min: 192.01, max: 256, color: '' },
-                { label: '81% - 100%', min: 256.01, max: 320, color: 'green' }
+                { label: '0 / 320', min: 0, max: 0, color: 'red' },
+                { label: '1 - 160 / 320 (1%-50%)', min: 0.01, max: 160, color: 'red' },
+                { label: '161 - 192 / 320 (50%-60%)', min: 160.01, max: 192, color: 'orange' },
+                { label: '193 - 224 / 320 (60%-70%)', min: 192.01, max: 224, color: 'yellow' },
+                { label: '225 - 256 / 320 (70%-80%)', min: 224.01, max: 256, color: '' },
+                { label: '257 - 288 / 320 (80%-90%)', min: 256.01, max: 288, color: '' },
+                { label: '289 - 304 / 320 (90%-95%)', min: 288.01, max: 304, color: 'green' },
+                { label: '305 - 320 / 320 (95%-100%)', min: 304.01, max: 320, color: 'green' }
             ];
 
             for (var b = 0; b < bands.length; b++) bands[b].count = 0;
