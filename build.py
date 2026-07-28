@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""Convert the results Excel file to a compact JSON for the website."""
+"""Convert the results Excel file to chunked JSON for the website."""
 
 import json
+import os
 import openpyxl
 
 EXCEL_FILE = "نتيجة ثانوية عامة نظام حديث(1).xlsx"
-OUTPUT_FILE = "data.json"
+OUTPUT_DIR = "chunks"
+CHUNK_SIZE = 50000
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 wb = openpyxl.load_workbook(EXCEL_FILE, read_only=True)
 ws = wb.active
 
 students = []
-for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True)):
+for row in ws.iter_rows(min_row=2, values_only=True):
     seating_no, arabic_name, total_degree, student_case_desc = row
     if seating_no is None:
         continue
@@ -24,7 +28,20 @@ for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True)):
 
 wb.close()
 
-with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-    json.dump(students, f, ensure_ascii=True, separators=(",", ":"))
+manifest = []
+for i in range(0, len(students), CHUNK_SIZE):
+    chunk = students[i:i + CHUNK_SIZE]
+    chunk_file = os.path.join(OUTPUT_DIR, f"{i // CHUNK_SIZE}.json")
+    with open(chunk_file, "w", encoding="utf-8") as f:
+        json.dump(chunk, f, ensure_ascii=True, separators=(",", ":"))
+    manifest.append({
+        "file": f"{i // CHUNK_SIZE}.json",
+        "min_id": chunk[0][0],
+        "max_id": chunk[-1][0],
+        "count": len(chunk),
+    })
 
-print(f"Wrote {len(students)} students to {OUTPUT_FILE}")
+with open(os.path.join(OUTPUT_DIR, "manifest.json"), "w", encoding="utf-8") as f:
+    json.dump(manifest, f)
+
+print(f"Wrote {len(students)} students in {len(manifest)} chunks to {OUTPUT_DIR}/")

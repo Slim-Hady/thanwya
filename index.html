@@ -236,13 +236,6 @@
             font-size: 14px;
         }
 
-        .stats {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 13px;
-            color: #999;
-        }
-
         .footer {
             text-align: center;
             padding: 30px 20px;
@@ -295,10 +288,10 @@
     </div>
 
     <script>
-        let students = [];
-        let byId = {};
+        let manifest = [];
+        let chunkCache = {};
         let mode = 'id';
-        let loaded = false;
+        let ready = false;
 
         const searchInput = document.getElementById('search-input');
         const resultsDiv = document.getElementById('results');
@@ -306,18 +299,15 @@
 
         resultsDiv.innerHTML = '<div class="loading">جاري تحميل البيانات<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
 
-        fetch('data.json')
+        fetch('chunks/manifest.json')
             .then(r => r.json())
             .then(data => {
-                students = data;
-                for (let i = 0; i < students.length; i++) {
-                    byId[students[i][0]] = i;
-                }
-                loaded = true;
+                manifest = data;
+                ready = true;
                 searchBtn.disabled = false;
                 resultsDiv.innerHTML = '';
             })
-            .catch(err => {
+            .catch(() => {
                 resultsDiv.innerHTML = '<div class="error-msg">حدث خطأ في تحميل البيانات</div>';
             });
 
@@ -335,8 +325,27 @@
             if (e.key === 'Enter') doSearch();
         });
 
+        function loadChunk(idx) {
+            if (chunkCache[idx]) return Promise.resolve(chunkCache[idx]);
+            return fetch('chunks/' + idx + '.json')
+                .then(r => r.json())
+                .then(data => {
+                    chunkCache[idx] = data;
+                    return data;
+                });
+        }
+
+        function findChunk(id) {
+            for (let i = 0; i < manifest.length; i++) {
+                if (id >= manifest[i].min_id && id <= manifest[i].max_id) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
         function doSearch() {
-            if (!loaded) return;
+            if (!ready) return;
             const q = searchInput.value.trim();
             if (!q) {
                 resultsDiv.innerHTML = '';
@@ -356,28 +365,60 @@
                 resultsDiv.innerHTML = '<div class="no-results">يرجى إدخال رقم جلوس صحيح</div>';
                 return;
             }
-            const idx = byId[id];
-            if (idx === undefined) {
+
+            const chunkIdx = findChunk(id);
+            if (chunkIdx === -1) {
                 resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتيجة لهذا الرقم</div>';
                 return;
             }
-            renderResults([students[idx]], true);
+
+            resultsDiv.innerHTML = '<div class="loading">جاري البحث<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
+
+            loadChunk(chunkIdx).then(chunk => {
+                for (let i = 0; i < chunk.length; i++) {
+                    if (chunk[i][0] === id) {
+                        renderResults([chunk[i]], true);
+                        return;
+                    }
+                }
+                resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتيجة لهذا الرقم</div>';
+            });
         }
 
         function searchByName(q) {
             const lower = q.toLowerCase();
             const matches = [];
-            for (let i = 0; i < students.length; i++) {
-                if (students[i][1].toLowerCase().includes(lower)) {
-                    matches.push(students[i]);
-                    if (matches.length >= 500) break;
+            let loaded = 0;
+
+            resultsDiv.innerHTML = '<div class="loading">جاري البحث في ' + manifest.length + ' ملفات<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
+
+            function searchNext(idx) {
+                if (idx >= manifest.length) {
+                    if (matches.length === 0) {
+                        resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتائج لهذا الاسم</div>';
+                    } else {
+                        renderResults(matches.slice(0, 500), false);
+                    }
+                    return;
                 }
+
+                loadChunk(idx).then(chunk => {
+                    for (let i = 0; i < chunk.length; i++) {
+                        if (chunk[i][1].toLowerCase().includes(lower)) {
+                            matches.push(chunk[i]);
+                            if (matches.length >= 500) {
+                                renderResults(matches, false);
+                                return;
+                            }
+                        }
+                    }
+                    loaded++;
+                    resultsDiv.innerHTML = '<div class="loading">جاري البحث... ' + loaded + '/' + manifest.length + '<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
+                    searchNext(idx + 1);
+                });
             }
-            if (matches.length === 0) {
-                resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتائج لهذا الاسم</div>';
-                return;
-            }
-            renderResults(matches, false);
+
+            searchNext(0);
         }
 
         function renderResults(list, single) {
