@@ -129,7 +129,7 @@
         var nameIndex = {};
         var mode = 'id';
         var ready = false;
-        var statsComputed = false;
+        var statsLoaded = false;
 
         var searchInput = document.getElementById('search-input');
         var resultsDiv = document.getElementById('results');
@@ -178,8 +178,8 @@
             document.getElementById('tab-stats').classList.toggle('active', page === 'stats');
             document.getElementById('page-search').classList.toggle('active', page === 'search');
             document.getElementById('page-stats').classList.toggle('active', page === 'stats');
-            if (page === 'stats' && ready && !statsComputed) {
-                computeStats();
+            if (page === 'stats' && !statsLoaded) {
+                renderStats();
             }
         }
 
@@ -291,85 +291,48 @@
             resultsDiv.innerHTML = html;
         }
 
-        function computeStats() {
-            var n = students.length;
-            var sum = 0;
-            var passCount = 0;
-            var failCount = 0;
-            var maxScore = 0;
-            var scores = [];
-
-            for (var i = 0; i < n; i++) {
-                var score = students[i][2];
-                scores.push(score);
-                sum += score;
-                if (score > maxScore) maxScore = score;
-                if (students[i][3].indexOf('ناجح') !== -1) passCount++;
-                else failCount++;
-            }
-
-            scores.sort(function(a, b) { return a - b; });
-            var median = (n % 2 === 0)
-                ? (scores[n / 2 - 1] + scores[n / 2]) / 2
-                : scores[Math.floor(n / 2)];
-            var mean = sum / n;
-
-            var bands = [
-                { label: '0 / 320', min: 0, max: 0, color: 'red' },
-                { label: '1 - 160 / 320 (1%-50%)', min: 0.01, max: 160, color: 'red' },
-                { label: '161 - 192 / 320 (50%-60%)', min: 160.01, max: 192, color: 'orange' },
-                { label: '193 - 224 / 320 (60%-70%)', min: 192.01, max: 224, color: 'yellow' },
-                { label: '225 - 256 / 320 (70%-80%)', min: 224.01, max: 256, color: '' },
-                { label: '257 - 288 / 320 (80%-90%)', min: 256.01, max: 288, color: '' },
-                { label: '289 - 304 / 320 (90%-95%)', min: 288.01, max: 304, color: 'green' },
-                { label: '305 - 320 / 320 (95%-100%)', min: 304.01, max: 320, color: 'green' }
-            ];
-
-            for (var b = 0; b < bands.length; b++) bands[b].count = 0;
-            for (var i = 0; i < n; i++) {
-                var s = students[i][2];
-                for (var b = 0; b < bands.length; b++) {
-                    if (s >= bands[b].min && s <= bands[b].max) {
-                        bands[b].count++;
-                        break;
-                    }
-                }
-            }
-
-            var maxBandCount = 0;
-            for (var b = 0; b < bands.length; b++) {
-                if (bands[b].count > maxBandCount) maxBandCount = bands[b].count;
-            }
-
-            var pctOf = function(val) { return ((val / n) * 100).toFixed(1); };
-            var fmt = function(val) { return val.toLocaleString('en'); };
-
+        function renderStats() {
+            var n = 919396;
             var html = '';
             html += '<div class="stats-grid">';
-            html += '<div class="stat-card"><div class="stat-number">' + fmt(n) + '</div><div class="stat-label">إجمالي الطلاب</div></div>';
-            html += '<div class="stat-card"><div class="stat-number green">' + fmt(passCount) + '</div><div class="stat-label">ناجح</div><div class="stat-sub">' + pctOf(passCount) + '%</div></div>';
-            html += '<div class="stat-card"><div class="stat-number red">' + fmt(failCount) + '</div><div class="stat-label">راسب</div><div class="stat-sub">' + pctOf(failCount) + '%</div></div>';
-            html += '<div class="stat-card"><div class="stat-number">' + mean.toFixed(1) + '</div><div class="stat-label">المتوسط (Mean)</div><div class="stat-sub">' + ((mean / 320) * 100).toFixed(1) + '% / 320</div></div>';
-            html += '<div class="stat-card"><div class="stat-number">' + median.toFixed(1) + '</div><div class="stat-label">الوسيط (Median)</div><div class="stat-sub">' + ((median / 320) * 100).toFixed(1) + '% / 320</div></div>';
-            html += '<div class="stat-card"><div class="stat-number">' + maxScore.toFixed(1) + '</div><div class="stat-label">أعلى درجة</div><div class="stat-sub">' + ((maxScore / 320) * 100).toFixed(1) + '% / 320</div></div>';
+            html += '<div class="stat-card"><div class="stat-number">919,396</div><div class="stat-label">إجمالي الطلاب</div></div>';
+            html += '<div class="stat-card"><div class="stat-number green">650,909</div><div class="stat-label">ناجح</div><div class="stat-sub">70.8%</div></div>';
+            html += '<div class="stat-card"><div class="stat-number red">268,487</div><div class="stat-label">راسب</div><div class="stat-sub">29.2%</div></div>';
+            html += '<div class="stat-card"><div class="stat-number">198.9</div><div class="stat-label">المتوسط (Mean)</div><div class="stat-sub">62.2% / 320</div></div>';
+            html += '<div class="stat-card"><div class="stat-number">203.5</div><div class="stat-label">الوسيط (Median)</div><div class="stat-sub">63.6% / 320</div></div>';
+            html += '<div class="stat-card"><div class="stat-number">320.0</div><div class="stat-label">أعلى درجة</div><div class="stat-sub">100.0% / 320</div></div>';
             html += '</div>';
+
+            var bands = [
+                { label: '0 / 320', count: 36954, pct: '4.0%', color: 'red' },
+                { label: '1 - 160 / 320 (1%-50%)', count: 152577, pct: '16.6%', color: 'red' },
+                { label: '161 - 192 / 320 (50%-60%)', count: 196957, pct: '21.4%', color: 'orange' },
+                { label: '193 - 224 / 320 (60%-70%)', count: 201285, pct: '21.9%', color: 'yellow' },
+                { label: '225 - 256 / 320 (70%-80%)', count: 169550, pct: '18.4%', color: '' },
+                { label: '257 - 288 / 320 (80%-90%)', count: 120551, pct: '13.1%', color: '' },
+                { label: '289 - 304 / 320 (90%-95%)', count: 31944, pct: '3.5%', color: 'green' },
+                { label: '305 - 320 / 320 (95%-100%)', count: 9578, pct: '1.0%', color: 'green' }
+            ];
+
+            var maxCount = 201285;
+            var fmt = function(v) { return v.toLocaleString('en'); };
 
             html += '<div class="chart-card">';
             html += '<div class="chart-title">توزيع الدرجات</div>';
             for (var b = 0; b < bands.length; b++) {
                 var band = bands[b];
-                var barWidth = maxBandCount > 0 ? Math.max((band.count / maxBandCount) * 100, 0.5) : 0.5;
+                var barWidth = Math.max((band.count / maxCount) * 100, 0.5);
                 var barClass = band.color ? ' ' + band.color : '';
                 html += '<div class="chart-row">';
                 html += '<div class="chart-label">' + band.label + '</div>';
                 html += '<div class="chart-bar-bg"><div class="chart-bar' + barClass + '" style="width:' + barWidth + '%"></div></div>';
-                html += '<div class="chart-info"><strong>' + fmt(band.count) + '</strong> طالب (' + pctOf(band.count) + '%)</div>';
+                html += '<div class="chart-info"><strong>' + fmt(band.count) + '</strong> طالب (' + band.pct + ')</div>';
                 html += '</div>';
             }
             html += '</div>';
 
             document.getElementById('stats-content').innerHTML = html;
-            statsComputed = true;
+            statsLoaded = true;
         }
 
         function escHtml(s) {
