@@ -10,6 +10,14 @@
         .header { background: #fff; border-bottom: 3px solid #1a73e8; padding: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .header h1 { text-align: center; font-size: 24px; font-weight: 600; color: #1a73e8; }
         .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+
+        .page-tabs { display: flex; margin-bottom: 24px; border-radius: 10px; overflow: hidden; border: 2px solid #e0e0e0; background: #fff; }
+        .page-tabs button { flex: 1; padding: 14px 20px; border: none; background: #f5f5f5; color: #666; font-size: 17px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .page-tabs button.active { background: #1a73e8; color: #fff; }
+        .page-tabs button:hover:not(.active) { background: #e8eaed; }
+        .page { display: none; }
+        .page.active { display: block; }
+
         .search-card { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px; }
         .search-toggle { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 2px solid #e0e0e0; }
         .search-toggle button { flex: 1; padding: 12px 20px; border: none; background: #f5f5f5; color: #666; font-size: 16px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
@@ -40,13 +48,44 @@
         .result-percentage { display: inline-block; background: #e8f0fe; color: #1a73e8; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 14px; }
         .no-results { text-align: center; padding: 40px 24px; color: #666; font-size: 16px; }
         .error-msg { text-align: center; padding: 20px; color: #d93025; font-size: 14px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); text-align: center; }
+        .stat-card.wide { grid-column: span 2; }
+        .stat-number { font-size: 28px; font-weight: 700; color: #1a73e8; margin-bottom: 4px; }
+        .stat-number.green { color: #0d904f; }
+        .stat-number.red { color: #d93025; }
+        .stat-label { font-size: 13px; color: #666; }
+        .stat-sub { font-size: 12px; color: #999; margin-top: 2px; }
+
+        .chart-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .chart-title { font-size: 17px; font-weight: 600; color: #202124; margin-bottom: 20px; }
+        .chart-row { display: flex; align-items: center; margin-bottom: 12px; gap: 12px; }
+        .chart-label { min-width: 90px; font-size: 13px; color: #666; text-align: left; white-space: nowrap; direction: ltr; }
+        .chart-bar-bg { flex: 1; height: 28px; background: #f0f2f5; border-radius: 6px; overflow: hidden; position: relative; }
+        .chart-bar { height: 100%; background: #1a73e8; border-radius: 6px; transition: width 0.6s ease; min-width: 2px; }
+        .chart-bar.green { background: #0d904f; }
+        .chart-bar.red { background: #d93025; }
+        .chart-bar.orange { background: #e37400; }
+        .chart-bar.yellow { background: #c4a700; }
+        .chart-info { min-width: 140px; font-size: 13px; color: #333; text-align: right; white-space: nowrap; }
+        .chart-info strong { color: #1a73e8; }
+
+        .stats-loading { text-align: center; padding: 60px 20px; color: #666; font-size: 16px; }
+
         .footer { text-align: center; padding: 30px 20px; color: #999; font-size: 13px; }
+
         @media (max-width: 600px) {
             .header h1 { font-size: 18px; }
             .search-card { padding: 20px; }
             .search-input-wrapper { flex-direction: column; }
             .search-btn { width: 100%; }
             .result-details { flex-direction: column; gap: 8px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .stat-card.wide { grid-column: span 1; }
+            .chart-label { min-width: 70px; font-size: 12px; }
+            .chart-info { min-width: 100px; font-size: 12px; }
+            .page-tabs button { font-size: 15px; padding: 12px 10px; }
         }
     </style>
 </head>
@@ -55,18 +94,31 @@
         <h1>نتائج الثانوية العامة - الدور الأول 2026</h1>
     </div>
     <div class="container">
-        <div class="search-card">
-            <div class="search-toggle">
-                <button id="btn-id" class="active" onclick="setMode('id')">رقم الجلوس</button>
-                <button id="btn-name" onclick="setMode('name')">الاسم</button>
+        <div class="page-tabs">
+            <button id="tab-search" class="active" onclick="showPage('search')">بحث</button>
+            <button id="tab-stats" onclick="showPage('stats')">إحصائيات</button>
+        </div>
+
+        <div id="page-search" class="page active">
+            <div class="search-card">
+                <div class="search-toggle">
+                    <button id="btn-id" class="active" onclick="setMode('id')">رقم الجلوس</button>
+                    <button id="btn-name" onclick="setMode('name')">الاسم</button>
+                </div>
+                <div class="search-input-wrapper">
+                    <input type="text" id="search-input" placeholder="أدخل رقم الجلوس" inputmode="numeric">
+                    <button class="search-btn" id="search-btn" onclick="doSearch()" disabled>بحث</button>
+                </div>
             </div>
-            <div class="search-input-wrapper">
-                <input type="text" id="search-input" placeholder="أدخل رقم الجلوس" inputmode="numeric">
-                <button class="search-btn" id="search-btn" onclick="doSearch()" disabled>بحث</button>
+            <div id="results">
+                <div class="loading">جاري تحميل البيانات...<div class="loading-sub">قد يستغرق هذا بضع ثوانٍ</div><div class="loading-bar"><div class="loading-bar-fill" id="load-bar"></div></div></div>
             </div>
         </div>
-        <div id="results">
-            <div class="loading">جاري تحميل البيانات...<div class="loading-sub">قد يستغرق هذا بضع ثوانٍ</div><div class="loading-bar"><div class="loading-bar-fill" id="load-bar"></div></div></div>
+
+        <div id="page-stats" class="page">
+            <div id="stats-content">
+                <div class="stats-loading">جاري تحميل الإحصائيات...</div>
+            </div>
         </div>
     </div>
     <div class="footer">نتائج الثانوية العامة 2026 - الدور الأول</div>
@@ -77,6 +129,7 @@
         var nameIndex = {};
         var mode = 'id';
         var ready = false;
+        var statsComputed = false;
 
         var searchInput = document.getElementById('search-input');
         var resultsDiv = document.getElementById('results');
@@ -119,6 +172,16 @@
                     resultsDiv.innerHTML = '<div class="error-msg">حدث خطأ في تحميل البيانات</div>';
                 });
         })();
+
+        function showPage(page) {
+            document.getElementById('tab-search').classList.toggle('active', page === 'search');
+            document.getElementById('tab-stats').classList.toggle('active', page === 'stats');
+            document.getElementById('page-search').classList.toggle('active', page === 'search');
+            document.getElementById('page-stats').classList.toggle('active', page === 'stats');
+            if (page === 'stats' && ready && !statsComputed) {
+                computeStats();
+            }
+        }
 
         function setMode(m) {
             mode = m;
@@ -226,6 +289,85 @@
 
             html += '</div>';
             resultsDiv.innerHTML = html;
+        }
+
+        function computeStats() {
+            var n = students.length;
+            var sum = 0;
+            var passCount = 0;
+            var failCount = 0;
+            var maxScore = 0;
+            var scores = [];
+
+            for (var i = 0; i < n; i++) {
+                var score = students[i][2];
+                scores.push(score);
+                sum += score;
+                if (score > maxScore) maxScore = score;
+                if (students[i][3].indexOf('ناجح') !== -1) passCount++;
+                else failCount++;
+            }
+
+            scores.sort(function(a, b) { return a - b; });
+            var median = (n % 2 === 0)
+                ? (scores[n / 2 - 1] + scores[n / 2]) / 2
+                : scores[Math.floor(n / 2)];
+            var mean = sum / n;
+
+            var bands = [
+                { label: '0%', min: 0, max: 0, color: 'red' },
+                { label: '1% - 20%', min: 0.01, max: 64, color: 'red' },
+                { label: '21% - 40%', min: 64.01, max: 128, color: 'orange' },
+                { label: '41% - 60%', min: 128.01, max: 192, color: 'yellow' },
+                { label: '61% - 80%', min: 192.01, max: 256, color: '' },
+                { label: '81% - 100%', min: 256.01, max: 320, color: 'green' }
+            ];
+
+            for (var b = 0; b < bands.length; b++) bands[b].count = 0;
+            for (var i = 0; i < n; i++) {
+                var s = students[i][2];
+                for (var b = 0; b < bands.length; b++) {
+                    if (s >= bands[b].min && s <= bands[b].max) {
+                        bands[b].count++;
+                        break;
+                    }
+                }
+            }
+
+            var maxBandCount = 0;
+            for (var b = 0; b < bands.length; b++) {
+                if (bands[b].count > maxBandCount) maxBandCount = bands[b].count;
+            }
+
+            var pctOf = function(val) { return ((val / n) * 100).toFixed(1); };
+            var fmt = function(val) { return val.toLocaleString('en'); };
+
+            var html = '';
+            html += '<div class="stats-grid">';
+            html += '<div class="stat-card"><div class="stat-number">' + fmt(n) + '</div><div class="stat-label">إجمالي الطلاب</div></div>';
+            html += '<div class="stat-card"><div class="stat-number green">' + fmt(passCount) + '</div><div class="stat-label">ناجح</div><div class="stat-sub">' + pctOf(passCount) + '%</div></div>';
+            html += '<div class="stat-card"><div class="stat-number red">' + fmt(failCount) + '</div><div class="stat-label">راسب</div><div class="stat-sub">' + pctOf(failCount) + '%</div></div>';
+            html += '<div class="stat-card"><div class="stat-number">' + mean.toFixed(1) + '</div><div class="stat-label">المتوسط (Mean)</div><div class="stat-sub">' + ((mean / 320) * 100).toFixed(1) + '% / 320</div></div>';
+            html += '<div class="stat-card"><div class="stat-number">' + median.toFixed(1) + '</div><div class="stat-label">الوسيط (Median)</div><div class="stat-sub">' + ((median / 320) * 100).toFixed(1) + '% / 320</div></div>';
+            html += '<div class="stat-card"><div class="stat-number">' + maxScore.toFixed(1) + '</div><div class="stat-label">أعلى درجة</div><div class="stat-sub">' + ((maxScore / 320) * 100).toFixed(1) + '% / 320</div></div>';
+            html += '</div>';
+
+            html += '<div class="chart-card">';
+            html += '<div class="chart-title">توزيع الدرجات</div>';
+            for (var b = 0; b < bands.length; b++) {
+                var band = bands[b];
+                var barWidth = maxBandCount > 0 ? Math.max((band.count / maxBandCount) * 100, 0.5) : 0.5;
+                var barClass = band.color ? ' ' + band.color : '';
+                html += '<div class="chart-row">';
+                html += '<div class="chart-label">' + band.label + '</div>';
+                html += '<div class="chart-bar-bg"><div class="chart-bar' + barClass + '" style="width:' + barWidth + '%"></div></div>';
+                html += '<div class="chart-info"><strong>' + fmt(band.count) + '</strong> طالب (' + pctOf(band.count) + '%)</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+
+            document.getElementById('stats-content').innerHTML = html;
+            statsComputed = true;
         }
 
         function escHtml(s) {
