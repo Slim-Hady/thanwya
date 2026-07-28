@@ -5,267 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نتائج الثانوية العامة 2026</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            min-height: 100vh;
-        }
-
-        .header {
-            background-color: #fff;
-            border-bottom: 3px solid #1a73e8;
-            padding: 20px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .header h1 {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 600;
-            color: #1a73e8;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .search-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            margin-bottom: 24px;
-        }
-
-        .search-toggle {
-            display: flex;
-            gap: 0;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 2px solid #e0e0e0;
-        }
-
-        .search-toggle button {
-            flex: 1;
-            padding: 12px 20px;
-            border: none;
-            background: #f5f5f5;
-            color: #666;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-
-        .search-toggle button.active {
-            background: #1a73e8;
-            color: #fff;
-            font-weight: 600;
-        }
-
-        .search-input-wrapper {
-            display: flex;
-            gap: 12px;
-        }
-
-        .search-input-wrapper input {
-            flex: 1;
-            padding: 14px 18px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
-            direction: rtl;
-        }
-
-        .search-input-wrapper input:focus {
-            border-color: #1a73e8;
-        }
-
-        .search-btn {
-            padding: 14px 32px;
-            background: #1a73e8;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-family: inherit;
-            white-space: nowrap;
-        }
-
-        .search-btn:hover {
-            background: #1557b0;
-        }
-
-        .search-btn:disabled {
-            background: #94baf7;
-            cursor: not-allowed;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-            font-size: 16px;
-        }
-
-        .loading-sub {
-            font-size: 13px;
-            color: #999;
-            margin-top: 8px;
-        }
-
-        .loading-bar {
-            width: 260px;
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            margin: 16px auto 0;
-            overflow: hidden;
-        }
-
-        .loading-bar-fill {
-            height: 100%;
-            background: #1a73e8;
-            border-radius: 3px;
-            transition: width 0.3s;
-            width: 0%;
-        }
-
-        @keyframes loading {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(350%); }
-        }
-
-        .results-card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            overflow: hidden;
-        }
-
-        .result-header {
-            background: #f5f7fa;
-            padding: 16px 24px;
-            border-bottom: 1px solid #e8eaed;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .result-item {
-            padding: 20px 24px;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.15s;
-        }
-
-        .result-item:last-child {
-            border-bottom: none;
-        }
-
-        .result-item:hover {
-            background: #f8f9fa;
-        }
-
-        .result-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #202124;
-            margin-bottom: 8px;
-        }
-
-        .result-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            font-size: 14px;
-        }
-
-        .result-field {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .result-label {
-            color: #666;
-        }
-
-        .result-value {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .result-value.success {
-            color: #0d904f;
-        }
-
-        .result-value.fail {
-            color: #d93025;
-        }
-
-        .result-percentage {
-            display: inline-block;
-            background: #e8f0fe;
-            color: #1a73e8;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 40px 24px;
-            color: #666;
-            font-size: 16px;
-        }
-
-        .error-msg {
-            text-align: center;
-            padding: 20px;
-            color: #d93025;
-            font-size: 14px;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 30px 20px;
-            color: #999;
-            font-size: 13px;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
+        .header { background: #fff; border-bottom: 3px solid #1a73e8; padding: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .header h1 { text-align: center; font-size: 24px; font-weight: 600; color: #1a73e8; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .search-card { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .search-toggle { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 2px solid #e0e0e0; }
+        .search-toggle button { flex: 1; padding: 12px 20px; border: none; background: #f5f5f5; color: #666; font-size: 16px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .search-toggle button.active { background: #1a73e8; color: #fff; font-weight: 600; }
+        .search-input-wrapper { display: flex; gap: 12px; }
+        .search-input-wrapper input { flex: 1; padding: 14px 18px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; font-family: inherit; outline: none; transition: border-color 0.2s; direction: rtl; }
+        .search-input-wrapper input:focus { border-color: #1a73e8; }
+        .search-btn { padding: 14px 32px; background: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: inherit; white-space: nowrap; }
+        .search-btn:hover { background: #1557b0; }
+        .search-btn:disabled { background: #94baf7; cursor: not-allowed; }
+        .loading { text-align: center; padding: 40px; color: #666; font-size: 16px; }
+        .loading-sub { font-size: 13px; color: #999; margin-top: 8px; }
+        .loading-bar { width: 260px; height: 6px; background: #e0e0e0; border-radius: 3px; margin: 16px auto 0; overflow: hidden; }
+        .loading-bar-fill { height: 100%; background: #1a73e8; border-radius: 3px; transition: width 0.3s; width: 0%; }
+        .results-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+        .result-header { background: #f5f7fa; padding: 16px 24px; border-bottom: 1px solid #e8eaed; font-size: 14px; color: #666; }
+        .result-item { padding: 20px 24px; border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+        .result-item:last-child { border-bottom: none; }
+        .result-item:hover { background: #f8f9fa; }
+        .result-item.zero-score { opacity: 0.5; }
+        .result-name { font-size: 18px; font-weight: 600; color: #202124; margin-bottom: 8px; }
+        .result-details { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; }
+        .result-field { display: flex; align-items: center; gap: 6px; }
+        .result-label { color: #666; }
+        .result-value { font-weight: 600; color: #333; }
+        .result-value.success { color: #0d904f; }
+        .result-value.fail { color: #d93025; }
+        .result-percentage { display: inline-block; background: #e8f0fe; color: #1a73e8; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .no-results { text-align: center; padding: 40px 24px; color: #666; font-size: 16px; }
+        .error-msg { text-align: center; padding: 20px; color: #d93025; font-size: 14px; }
+        .footer { text-align: center; padding: 30px 20px; color: #999; font-size: 13px; }
         @media (max-width: 600px) {
-            .header h1 {
-                font-size: 18px;
-            }
-            .search-card {
-                padding: 20px;
-            }
-            .search-input-wrapper {
-                flex-direction: column;
-            }
-            .search-btn {
-                width: 100%;
-            }
-            .result-details {
-                flex-direction: column;
-                gap: 8px;
-            }
+            .header h1 { font-size: 18px; }
+            .search-card { padding: 20px; }
+            .search-input-wrapper { flex-direction: column; }
+            .search-btn { width: 100%; }
+            .result-details { flex-direction: column; gap: 8px; }
         }
     </style>
 </head>
@@ -273,7 +54,6 @@
     <div class="header">
         <h1>نتائج الثانوية العامة - الدور الأول 2026</h1>
     </div>
-
     <div class="container">
         <div class="search-card">
             <div class="search-toggle">
@@ -285,19 +65,16 @@
                 <button class="search-btn" id="search-btn" onclick="doSearch()" disabled>بحث</button>
             </div>
         </div>
-
         <div id="results">
             <div class="loading">جاري تحميل البيانات...<div class="loading-sub">قد يستغرق هذا بضع ثوانٍ</div><div class="loading-bar"><div class="loading-bar-fill" id="load-bar"></div></div></div>
         </div>
     </div>
-
-    <div class="footer">
-        نتائج الثانوية العامة 2026 - الدور الأول
-    </div>
+    <div class="footer">نتائج الثانوية العامة 2026 - الدور الأول</div>
 
     <script>
         var students = [];
         var byId = {};
+        var nameIndex = {};
         var mode = 'id';
         var ready = false;
 
@@ -317,7 +94,15 @@
                             .then(function(r) { return r.json(); })
                             .then(function(data) {
                                 for (var i = 0; i < data.length; i++) {
-                                    byId[data[i][0]] = students.length;
+                                    var idx = students.length;
+                                    byId[data[i][0]] = idx;
+                                    var words = data[i][1].toLowerCase().split(/\s+/);
+                                    for (var w = 0; w < words.length; w++) {
+                                        var word = words[w];
+                                        if (word.length < 2) continue;
+                                        if (!nameIndex[word]) nameIndex[word] = [];
+                                        nameIndex[word].push(idx);
+                                    }
                                     students.push(data[i]);
                                 }
                                 loaded++;
@@ -372,18 +157,50 @@
         }
 
         function searchByName(q) {
-            var lower = q.toLowerCase();
+            var words = q.toLowerCase().split(/\s+/).filter(function(w) { return w.length >= 2; });
+            if (words.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">يرجى إدخال اسم صحيح</div>';
+                return;
+            }
+
+            var candidates = null;
+            for (var w = 0; w < words.length; w++) {
+                var wordList = nameIndex[words[w]];
+                if (!wordList) {
+                    resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتائج لهذا الاسم</div>';
+                    return;
+                }
+                if (candidates === null || wordList.length < candidates.length) {
+                    candidates = wordList;
+                }
+            }
+
             var matches = [];
-            for (var i = 0; i < students.length; i++) {
-                if (students[i][1].toLowerCase().indexOf(lower) !== -1) {
-                    matches.push(students[i]);
+            var seen = {};
+            for (var i = 0; i < candidates.length; i++) {
+                var idx = candidates[i];
+                if (seen[idx]) continue;
+                var name = students[idx][1].toLowerCase();
+                var allMatch = true;
+                for (var w = 0; w < words.length; w++) {
+                    if (name.indexOf(words[w]) === -1) {
+                        allMatch = false;
+                        break;
+                    }
+                }
+                if (allMatch) {
+                    seen[idx] = true;
+                    matches.push(students[idx]);
                     if (matches.length >= 500) break;
                 }
             }
+
             if (matches.length === 0) {
                 resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتائج لهذا الاسم</div>';
                 return;
             }
+
+            matches.sort(function(a, b) { return b[2] - a[2]; });
             renderResults(matches, false);
         }
 
@@ -396,15 +213,15 @@
 
             for (var i = 0; i < list.length; i++) {
                 var s = list[i];
-                html += '<div class="result-item">';
+                var isZero = s[2] === 0;
+                html += '<div class="result-item' + (isZero ? ' zero-score' : '') + '">';
                 html += '<div class="result-name">' + escHtml(s[1]) + '</div>';
                 html += '<div class="result-details">';
                 html += '<div class="result-field"><span class="result-label">رقم الجلوس:</span><span class="result-value">' + s[0] + '</span></div>';
                 html += '<div class="result-field"><span class="result-label">الدرجة:</span><span class="result-value">' + s[2] + ' / 320</span></div>';
                 html += '<div class="result-field"><span class="result-percentage">' + pct(s[2]) + '%</span></div>';
                 html += '<div class="result-field"><span class="result-label">الحالة:</span><span class="result-value ' + statusClass(s[3]) + '">' + escHtml(s[3]) + '</span></div>';
-                html += '</div>';
-                html += '</div>';
+                html += '</div></div>';
             }
 
             html += '</div>';
