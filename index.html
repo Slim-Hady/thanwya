@@ -124,11 +124,17 @@
             font-size: 16px;
         }
 
+        .loading-sub {
+            font-size: 13px;
+            color: #999;
+            margin-top: 8px;
+        }
+
         .loading-bar {
-            width: 200px;
-            height: 4px;
+            width: 260px;
+            height: 6px;
             background: #e0e0e0;
-            border-radius: 2px;
+            border-radius: 3px;
             margin: 16px auto 0;
             overflow: hidden;
         }
@@ -136,9 +142,9 @@
         .loading-bar-fill {
             height: 100%;
             background: #1a73e8;
-            border-radius: 2px;
-            animation: loading 1.5s ease-in-out infinite;
-            width: 40%;
+            border-radius: 3px;
+            transition: width 0.3s;
+            width: 0%;
         }
 
         @keyframes loading {
@@ -276,11 +282,13 @@
             </div>
             <div class="search-input-wrapper">
                 <input type="text" id="search-input" placeholder="أدخل رقم الجلوس" inputmode="numeric">
-                <button class="search-btn" id="search-btn" onclick="doSearch()">بحث</button>
+                <button class="search-btn" id="search-btn" onclick="doSearch()" disabled>بحث</button>
             </div>
         </div>
 
-        <div id="results"></div>
+        <div id="results">
+            <div class="loading">جاري تحميل البيانات...<div class="loading-sub">قد يستغرق هذا بضع ثوانٍ</div><div class="loading-bar"><div class="loading-bar-fill" id="load-bar"></div></div></div>
+        </div>
     </div>
 
     <div class="footer">
@@ -288,28 +296,44 @@
     </div>
 
     <script>
-        let manifest = [];
-        let chunkCache = {};
-        let mode = 'id';
-        let ready = false;
+        var students = [];
+        var byId = {};
+        var mode = 'id';
+        var ready = false;
 
-        const searchInput = document.getElementById('search-input');
-        const resultsDiv = document.getElementById('results');
-        const searchBtn = document.getElementById('search-btn');
+        var searchInput = document.getElementById('search-input');
+        var resultsDiv = document.getElementById('results');
+        var searchBtn = document.getElementById('search-btn');
+        var loadBar = document.getElementById('load-bar');
 
-        resultsDiv.innerHTML = '<div class="loading">جاري تحميل البيانات<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
-
-        fetch('chunks/manifest.json')
-            .then(r => r.json())
-            .then(data => {
-                manifest = data;
-                ready = true;
-                searchBtn.disabled = false;
-                resultsDiv.innerHTML = '';
-            })
-            .catch(() => {
-                resultsDiv.innerHTML = '<div class="error-msg">حدث خطأ في تحميل البيانات</div>';
-            });
+        (function loadData() {
+            fetch('chunks/manifest.json')
+                .then(function(r) { return r.json(); })
+                .then(function(manifest) {
+                    var total = manifest.length;
+                    var loaded = 0;
+                    var promises = manifest.map(function(chunk) {
+                        return fetch('chunks/' + chunk.file)
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                for (var i = 0; i < data.length; i++) {
+                                    byId[data[i][0]] = students.length;
+                                    students.push(data[i]);
+                                }
+                                loaded++;
+                                loadBar.style.width = Math.round((loaded / total) * 100) + '%';
+                            });
+                    });
+                    Promise.all(promises).then(function() {
+                        ready = true;
+                        searchBtn.disabled = false;
+                        resultsDiv.innerHTML = '';
+                    });
+                })
+                .catch(function() {
+                    resultsDiv.innerHTML = '<div class="error-msg">حدث خطأ في تحميل البيانات</div>';
+                });
+        })();
 
         function setMode(m) {
             mode = m;
@@ -321,115 +345,57 @@
             resultsDiv.innerHTML = '';
         }
 
-        searchInput.addEventListener('keydown', e => {
+        searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') doSearch();
         });
 
-        function loadChunk(idx) {
-            if (chunkCache[idx]) return Promise.resolve(chunkCache[idx]);
-            return fetch('chunks/' + idx + '.json')
-                .then(r => r.json())
-                .then(data => {
-                    chunkCache[idx] = data;
-                    return data;
-                });
-        }
-
-        function findChunk(id) {
-            for (let i = 0; i < manifest.length; i++) {
-                if (id >= manifest[i].min_id && id <= manifest[i].max_id) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
         function doSearch() {
             if (!ready) return;
-            const q = searchInput.value.trim();
-            if (!q) {
-                resultsDiv.innerHTML = '';
-                return;
-            }
-
-            if (mode === 'id') {
-                searchById(q);
-            } else {
-                searchByName(q);
-            }
+            var q = searchInput.value.trim();
+            if (!q) { resultsDiv.innerHTML = ''; return; }
+            if (mode === 'id') searchById(q);
+            else searchByName(q);
         }
 
         function searchById(q) {
-            const id = parseInt(q, 10);
+            var id = parseInt(q, 10);
             if (isNaN(id)) {
                 resultsDiv.innerHTML = '<div class="no-results">يرجى إدخال رقم جلوس صحيح</div>';
                 return;
             }
-
-            const chunkIdx = findChunk(id);
-            if (chunkIdx === -1) {
+            var idx = byId[id];
+            if (idx === undefined) {
                 resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتيجة لهذا الرقم</div>';
                 return;
             }
-
-            resultsDiv.innerHTML = '<div class="loading">جاري البحث<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
-
-            loadChunk(chunkIdx).then(chunk => {
-                for (let i = 0; i < chunk.length; i++) {
-                    if (chunk[i][0] === id) {
-                        renderResults([chunk[i]], true);
-                        return;
-                    }
-                }
-                resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتيجة لهذا الرقم</div>';
-            });
+            renderResults([students[idx]], true);
         }
 
         function searchByName(q) {
-            const lower = q.toLowerCase();
-            const matches = [];
-            let loaded = 0;
-
-            resultsDiv.innerHTML = '<div class="loading">جاري البحث في ' + manifest.length + ' ملفات<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
-
-            function searchNext(idx) {
-                if (idx >= manifest.length) {
-                    if (matches.length === 0) {
-                        resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتائج لهذا الاسم</div>';
-                    } else {
-                        renderResults(matches.slice(0, 500), false);
-                    }
-                    return;
+            var lower = q.toLowerCase();
+            var matches = [];
+            for (var i = 0; i < students.length; i++) {
+                if (students[i][1].toLowerCase().indexOf(lower) !== -1) {
+                    matches.push(students[i]);
+                    if (matches.length >= 500) break;
                 }
-
-                loadChunk(idx).then(chunk => {
-                    for (let i = 0; i < chunk.length; i++) {
-                        if (chunk[i][1].toLowerCase().includes(lower)) {
-                            matches.push(chunk[i]);
-                            if (matches.length >= 500) {
-                                renderResults(matches, false);
-                                return;
-                            }
-                        }
-                    }
-                    loaded++;
-                    resultsDiv.innerHTML = '<div class="loading">جاري البحث... ' + loaded + '/' + manifest.length + '<div class="loading-bar"><div class="loading-bar-fill"></div></div></div>';
-                    searchNext(idx + 1);
-                });
             }
-
-            searchNext(0);
+            if (matches.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">لم يتم العثور على نتائج لهذا الاسم</div>';
+                return;
+            }
+            renderResults(matches, false);
         }
 
         function renderResults(list, single) {
-            const pct = (score) => ((score / 320) * 100).toFixed(1);
-            const statusClass = (s) => s.includes('ناجح') ? 'success' : 'fail';
+            var pct = function(score) { return ((score / 320) * 100).toFixed(1); };
+            var statusClass = function(s) { return s.indexOf('ناجح') !== -1 ? 'success' : 'fail'; };
 
-            let html = '<div class="results-card">';
+            var html = '<div class="results-card">';
             html += '<div class="result-header">عدد النتائج: ' + list.length + '</div>';
 
-            for (let i = 0; i < list.length; i++) {
-                const s = list[i];
+            for (var i = 0; i < list.length; i++) {
+                var s = list[i];
                 html += '<div class="result-item">';
                 html += '<div class="result-name">' + escHtml(s[1]) + '</div>';
                 html += '<div class="result-details">';
@@ -446,7 +412,7 @@
         }
 
         function escHtml(s) {
-            const d = document.createElement('div');
+            var d = document.createElement('div');
             d.textContent = s;
             return d.innerHTML;
         }
